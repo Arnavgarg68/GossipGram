@@ -28,27 +28,15 @@ const Homepage = () => {
             roomId: roomi.current.value,
             username: usern.current.value
         })
-        let status = 0;
-        socket.on("success", (e) => {
-            status = e.status;
-            toast.success(e.message);
-        })
-        setTimeout(()=>{
-            if (status !== 0) {
-                sessionStorage.setItem('roomId',roomi.current.value);
-                sessionStorage.setItem('username',usern.current.value);
-                toast("bye")
-                navigate('/chatbox')
-            }
-        },500)
-
+        
+        
     }
     if (socket) {
         socket.on("error", (data) => {
             toast.error(data.message);
         })
     }
-    const handleSubmitcreate = (e) => {
+    const handleSubmitcreate = async(e) => {
         e.preventDefault();
         if (!usernc.current.value.trim(' ')) {
             toast.error("User name invalid/empty")
@@ -62,15 +50,62 @@ const Homepage = () => {
             toast.error("Number of participants should be between 2 and 20");
             return;
         }
-        socket.on("success", (e) => {
-            toast("formvalid")
-        })
+        try {
+            const sendDetails = {
+                roomId:roomic.current.value.trim(' '),
+                maxParticipants:roompc.current.value.trim(' ')
+            }
+            const response = await fetch('http://localhost:3000/createRoom',{
+                method:"POST",
+                headers:{
+                    'content-type':"application/json"
+                },
+                body:JSON.stringify(sendDetails)
+            });
+            if(!response.ok){
+                toast.error("Error in connecting to server")
+                return
+            }
+            const data = await response.json();
+            if(data.error){
+                toast.warning(data.errorMessage)
+                return;
+            }
+            else{
+                toast.success("Room creation successfull joining in 5sec");
+                const obj = {
+                    username:usernc.current.value.trim(' '),
+                    socketId:socket.id,
+                    time: new Date().toISOString
+                }
+            }
+        } catch (error) {
+            
+        }
+        toast("formvalid")
+        
 
     }
     useEffect(() => {
-
-
-    }, [])
+        if(socket){
+            socket.on("success", (e) => {
+                let status = 0;
+                status = e.status;
+                toast.success(e.message);
+                if (status !== 0) {
+                    sessionStorage.setItem('roomId',roomi.current.value);
+                    sessionStorage.setItem('username',usern.current.value);
+                    toast("bye")
+                    navigate('/chatbox')
+                }
+            })
+        }
+        return ()=>{
+            if(socket){
+                socket.off("success")
+            }
+        }
+    }, [socket])
     return (
         <div className='homepage-main'>
             <ToastContainer />

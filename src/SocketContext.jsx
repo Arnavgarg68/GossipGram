@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import io from 'socket.io-client';
 
 const SocketContext = createContext();
-
+// https://gossipgram-s7ik.onrender.com
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
 
