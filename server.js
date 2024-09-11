@@ -52,7 +52,6 @@ app.post('/createRoom', async (req, res) => {
         maxParticipants: maxParticipants
     }
     rooms.push(obj);
-    console.log(rooms);
     res.status(200).json({
         message: "Room created successfully"
     })
@@ -81,6 +80,7 @@ io.on('connection', (socket) => {
                 type: "room-join",
                 message: "room doesn't exist try creating room"
             })
+            return;
         }
         else {
             if (rooms[flag].maxParticipants < (rooms[flag].users.length + 1)) {
@@ -91,6 +91,28 @@ io.on('connection', (socket) => {
                 return;
             }
             const joinTime = new Date().toISOString();
+            let counter = -1;
+            rooms[flag].users.forEach((user) => {
+                if (user.socketId == socket.id) {
+                    socket.emit('success', {
+                        type: "room-joined",
+                        status: 200,
+                        message: "room joined successfully"
+                    })
+                    io.to(`room${data.roomId}`).emit("userAlert", {
+                        username: data.username,
+                        message: `${data.username} back ${rooms[flag].users.length} participants`,
+                        type: "repeat user",
+                        time: joinTime
+                    })
+                    counter = 5;
+                    socket.join(`room${data.roomId}`)
+                    return;
+                }
+            })
+            if (counter == 5) {
+                return;
+            }
             rooms[flag].users.push({
                 username: data.username,
                 socketId: socket.id,
@@ -110,13 +132,13 @@ io.on('connection', (socket) => {
                     time: joinTime
                 })
             }, 1000)
-            console.log("hello user")
+
         }
     })
 
     socket.on('msg', (data) => {
         const r = [...socket.rooms].filter((room) => room !== socket.id);
-        console.log(r);
+
         let helper = -1;
         if (r.indexOf(`room${data.roomId}`) == -1) {
             rooms.forEach((ro) => {
@@ -131,7 +153,6 @@ io.on('connection', (socket) => {
                     type: "room deleted",
                     status: 301
                 })
-                console.log(data)
                 return;
             }
             socket.join(`room${data.roomId}`);
