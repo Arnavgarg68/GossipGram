@@ -51,7 +51,7 @@ const Homepage = () => {
                 roomId:roomic.current.value.trim(' '),
                 maxParticipants:roompc.current.value.trim(' ')
             }
-            const response = await fetch('http://localhost:3000/createRoom',{
+            const response = await fetch('https://gossipgram-s7ik.onrender.com/createRoom',{
                 method:"POST",
                 headers:{
                     'content-type':"application/json"
