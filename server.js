@@ -33,6 +33,13 @@ app.get('/ping', (req, res) => {
 app.post('/createRoom', async (req, res) => {
     let helper = -1;
     const { roomId, maxParticipants } = req.body;
+    if(!roomId||!maxParticipants){
+        res.status(200).json({
+            error:301,
+            error:"Invalid parameters"
+        })
+        return
+    }
     rooms.forEach((e) => {
         if (e.roomId === roomId) {
             res.status(200).json({
