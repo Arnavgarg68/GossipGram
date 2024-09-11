@@ -14,15 +14,8 @@ const server = app.listen(port, () => {
     console.log("server listen issue -> " + error)
 })
 
-app.get('/ping', (req, res) => {
-    const time = new Date
-    console.log("ping hit at -> " + new Date().toISOString())
-    res.status(200).json("Working server" + new Date().toISOString())
-})
-
-const io = socketio(server);
 var rooms = [{
-    roomId: 12345,
+    roomId: 144144,
     users: [{
         username: "dummy",
         socketId: "9273928",
@@ -30,6 +23,43 @@ var rooms = [{
     }],
     maxParticipants: 10
 }];
+
+app.get('/ping', (req, res) => {
+    const time = new Date
+    console.log("ping hit at -> " + new Date().toISOString())
+    res.status(200).json("Working server" + new Date().toISOString())
+})
+
+app.post('/createRoom', async (req, res) => {
+    let helper = -1;
+    const { roomId, maxParticipants } = req.body;
+    rooms.forEach((e) => {
+        if (e.roomId === roomId) {
+            res.status(200).json({
+                error: "301",
+                errorMessage: "Room already created try joining it",
+            })
+            helper = 2;
+            return;
+        }
+    })
+    if (helper == 2) {
+        return;
+    }
+    const obj = {
+        roomId: roomId,
+        users: [],
+        maxParticipants: maxParticipants
+    }
+    rooms.push(obj);
+    console.log(rooms);
+    res.status(200).json({
+        message: "Room created successfully"
+    })
+    return;
+})
+
+const io = socketio(server);
 io.on('connection', (socket) => {
     console.log("user connected")
     socket.on('userjoined-room', (data) => {
@@ -80,15 +110,48 @@ io.on('connection', (socket) => {
                     time: joinTime
                 })
             }, 1000)
-
+            console.log("hello user")
         }
     })
 
     socket.on('msg', (data) => {
         const r = [...socket.rooms].filter((room) => room !== socket.id);
-        console.log(data)
-        if(r.indexOf(data.roomId)==-1){
+        console.log(r);
+        let helper = -1;
+        if (r.indexOf(`room${data.roomId}`) == -1) {
+            rooms.forEach((ro) => {
+                if (ro.roomId == data.roomId) {
+                    helper = 4;
+                    return;
+                }
+            })
+            if (helper == -1) {
+                socket.emit("error", {
+                    message: "room has been deleted create new room",
+                    type: "room deleted",
+                    status: 301
+                })
+                console.log(data)
+                return;
+            }
             socket.join(`room${data.roomId}`);
+            rooms.forEach((ro, idx) => {
+                if (ro.roomId == data.roomId) {
+                    ro.users.push({
+                        username: data.username,
+                        socketId: socket.id,
+                        time: new Date().toISOString
+                    })
+                }
+            })
+            setTimeout(() => {
+                io.to(`room${data.roomId}`).emit("userAlert", {
+                    username: data.username,
+                    message: `${data.username} joined`,
+                    type: "new user",
+                    time: new Date().toISOString
+                })
+            }, 1000)
         }
         data.time = new Date().toISOString();
         data.socketId = socket.id;
