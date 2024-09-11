@@ -77,9 +77,20 @@ const Chatbox = () => {
             }
         };
 
+        const handlepopstate = (event)=>{
+            socket.emit("user-left",{
+                username:usern,
+                socketId:socket.id,
+                roomId:roomi
+            })
+        }
+
         document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('popstate', handlepopstate);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('popstate', handlepopstate);
+
         };
     }, []);
     useEffect(() => {
@@ -112,6 +123,7 @@ const Chatbox = () => {
             if (socket) {
                 socket.off('msg'); // Clean up the listener
                 socket.off('userAlert'); // Clean up the listener
+                socket.off('error');
             }
         };
     }, [socket]);

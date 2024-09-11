@@ -31,11 +31,7 @@ const Homepage = () => {
         
         
     }
-    if (socket) {
-        socket.on("error", (data) => {
-            toast.error(data.message);
-        })
-    }
+    
     const handleSubmitcreate = async(e) => {
         e.preventDefault();
         if (!usernc.current.value.trim(' ')) {
@@ -99,10 +95,15 @@ const Homepage = () => {
                     navigate('/chatbox')
                 }
             })
+                socket.on("error", (data) => {
+                    toast.error(data.message);
+                })
+            
         }
         return ()=>{
             if(socket){
                 socket.off("success")
+                socket.off("error")
             }
         }
     }, [socket])
