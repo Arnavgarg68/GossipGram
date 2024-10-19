@@ -68,7 +68,7 @@ const Homepage = () => {
                 return;
             }
             else{
-                toast.success("Room creation successfull joining in 5sec");
+                toast.success("Room creation successfull: Now join using Same RoomID");
                 const obj = {
                     username:usernc.current.value.trim(' '),
                     socketId:socket.id,
@@ -77,10 +77,7 @@ const Homepage = () => {
             }
         } catch (error) {
             
-        }
-        toast("formvalid")
-        
-
+        }        
     }
     useEffect(() => {
         if(socket){
